@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeoCard — Web3 Crypto Platform</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+tailwind.config={theme:{extend:{colors:{base:'#0B0F19',panel:'#0F1422',neon:'#00FFA3',violet:'#7C5CFF',cyan:'#3BE0FF'},fontFamily:{sora:['Sora','sans-serif']}}}}
+</script>
+<style>
+  *{font-family:'Sora',sans-serif}
+  body{background:#0B0F19;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;z-index:-1;background:
+    radial-gradient(600px circle at 15% 10%, rgba(124,92,255,.18), transparent 40%),
+    radial-gradient(700px circle at 85% 90%, rgba(0,255,163,.14), transparent 45%),
+    radial-gradient(500px circle at 70% 20%, rgba(59,224,255,.10), transparent 40%);}
+  .glass{background:rgba(255,255,255,.04);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.08)}
+  .glass:hover{border-color:rgba(0,255,163,.35)}
+  ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(0,255,163,.25);border-radius:8px}::-webkit-scrollbar-track{background:transparent}
+  .nav-item{transition:all .25s ease}.nav-item:hover{background:rgba(0,255,163,.08);transform:translateX(4px)}
+  .nav-active{background:linear-gradient(90deg,rgba(0,255,163,.15),transparent);border-left:3px solid #00FFA3;color:#00FFA3}
+  .btn-glow{transition:all .3s cubic-bezier(.2,.8,.2,1);position:relative;overflow:hidden}
+  .btn-glow:hover{transform:translateY(-3px);box-shadow:0 10px 30px -8px rgba(0,255,163,.55)}
+  .btn-glow::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);transition:.5s}
+  .btn-glow:hover::after{left:100%}
+  .lift{transition:all .35s cubic-bezier(.2,.8,.2,1)}.lift:hover{transform:translateY(-6px) scale(1.01)}
+  .credit-card{transition:all .5s ease}.credit-card:hover{transform:rotateY(6deg) rotateX(4deg)}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .fade-up{animation:fadeUp .6s ease both}
+  .tab{display:none}.tab.active{display:block;animation:fadeUp .5s ease both}
+  input[type=range]{-webkit-appearance:none;height:6px;border-radius:6px;background:linear-gradient(90deg,#00FFA3,#7C5CFF);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#0B0F19;border:3px solid #00FFA3;cursor:pointer;box-shadow:0 0 12px rgba(0,255,163,.7)}
+  .grid-frozen{filter:grayscale(1) brightness(.7)}
+  .toast{animation:fadeUp .4s ease both}
+  @keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin 1s linear infinite}
+  @media(max-width:1024px){#sidebar{transform:translateX(-110%);transition:transform .3s}#sidebar.open{transform:translateX(0)}#main{margin-left:0!important}}
+</style>
+</head>
+<body class="text-slate-200">
+<button onclick="document.getElementById('sidebar').classList.toggle('open')" class="lg:hidden fixed top-5 left-5 z-40 glass w-11 h-11 rounded-xl flex items-center justify-center"><i data-lucide="menu"></i></button>
+<div class="flex min-h-screen">
+
+  <aside id="sidebar" class="w-64 shrink-0 glass m-4 rounded-3xl p-6 flex flex-col fixed h-[calc(100vh-2rem)] z-30">
+    <div class="flex items-center gap-3 mb-10">
+      <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-neon to-violet flex items-center justify-center shadow-lg shadow-neon/30"><i data-lucide="hexagon"></i></div>
+      <div><h1 class="font-bold text-lg leading-none">NeoCard</h1><p class="text-[11px] text-neon tracking-widest">WEB3 FINANCE</p></div>
+    </div>
+    <nav class="flex flex-col gap-2 flex-1">
+      <button onclick="showTab('dashboard',this)" class="nav-item nav-active flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium"><i data-lucide="layout-dashboard" class="w-5 h-5"></i>Дашборд</button>
+      <button onclick="showTab('cards',this)" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400"><i data-lucide="credit-card" class="w-5 h-5"></i>Мои Карты</button>
+      <button onclick="showTab('staking',this)" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400"><i data-lucide="trending-up" class="w-5 h-5"></i>Стейкинг</button>
+      <button onclick="showTab('history',this)" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400"><i data-lucide="history" class="w-5 h-5"></i>История</button>
+    </nav>
+    <div class="glass rounded-2xl p-4 mt-4 flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-violet to-cyan flex items-center justify-center font-bold">A</div><div><p class="text-sm font-semibold">Alex Crypto</p><p class="text-[11px] text-neon">Premium ✦</p></div></div>
+  </aside>
+
+  <main id="main" class="flex-1 ml-72 p-6 lg:p-10 pt-20 lg:pt-10">
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="tab active">
+      <header class="flex items-center justify-between mb-8 flex-wrap gap-4">
+        <div><h2 class="text-3xl font-bold">Дашборд</h2><p class="text-slate-400 text-sm">Добро пожаловать, Alex 👋</p></div>
+        <div id="liveBadge" class="glass px-4 py-2 rounded-xl flex items-center gap-2 text-sm"><span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>Загрузка курсов…</div>
+      </header>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div class="glass lift rounded-3xl p-7 relative overflow-hidden">
+          <div class="absolute -right-8 -top-8 w-32 h-32 bg-neon/10 rounded-full blur-2xl"></div>
+          <p class="text-slate-400 text-sm mb-1">Общий баланс</p>
+          <h3 class="text-4xl font-extrabold tracking-tight"><span id="balUSD">$0</span></h3>
+          <p class="text-neon mt-1 text-sm flex items-center gap-1"><i data-lucide="bitcoin" class="w-4 h-4"></i><span id="balBTC">0</span> BTC</p>
+          <p id="balChange" class="text-xs text-slate-400 mt-3">по текущему курсу BTC</p>
+        </div>
+        <div class="lg:col-span-2 grid grid-cols-3 gap-4">
+          <button onclick="openTx('deposit')" class="btn-glow glass rounded-3xl p-6 flex flex-col items-center justify-center gap-3 text-center"><div class="w-12 h-12 rounded-2xl bg-neon/15 flex items-center justify-center"><i data-lucide="download" class="text-neon"></i></div><span class="text-sm font-semibold">Пополнить</span></button>
+          <button onclick="openTx('transfer')" class="btn-glow glass rounded-3xl p-6 flex flex-col items-center justify-center gap-3 text-center"><div class="w-12 h-12 rounded-2xl bg-violet/15 flex items-center justify-center"><i data-lucide="send" class="text-violet"></i></div><span class="text-sm font-semibold">Перевести</span></button>
+          <button onclick="openTx('exchange')" class="btn-glow glass rounded-3xl p-6 flex flex-col items-center justify-center gap-3 text-center"><div class="w-12 h-12 rounded-2xl bg-cyan/15 flex items-center justify-center"><i data-lucide="repeat" class="text-cyan"></i></div><span class="text-sm font-semibold">Обменять</span></button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="tickers"></div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="glass rounded-3xl p-7 lg:col-span-2">
+          <div class="flex items-center justify-between mb-4"><h4 class="font-semibold">Цена BTC (7 дней)</h4><span id="chartSub" class="text-xs text-slate-400">live · CoinGecko</span></div>
+          <canvas id="chartFlow" height="120"></canvas>
+        </div>
+        <div class="glass rounded-3xl p-7"><h4 class="font-semibold mb-4">Распределение активов</h4><canvas id="chartPie" height="180"></canvas></div>
+      </div>
+    </section>
+
+    <!-- CARDS -->
+    <section id="cards" class="tab">
+      <header class="mb-8"><h2 class="text-3xl font-bold">Мои Карты</h2><p class="text-slate-400 text-sm">Управление дебетовой криптокартой</p></header>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div>
+          <div id="creditCard" class="credit-card rounded-3xl p-7 h-60 relative overflow-hidden shadow-2xl" style="background:linear-gradient(135deg,#0d2b25,#0B0F19 60%,#1a1340)">
+            <div class="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-neon/20 blur-3xl"></div>
+            <div class="flex justify-between items-start"><div><p class="text-xs text-slate-300">NeoCard Debit</p><p id="cardStatus" class="text-neon text-sm font-semibold">● Активна</p></div><i data-lucide="wifi" class="rotate-90 text-slate-300"></i></div>
+            <div class="mt-8 flex items-center gap-3"><div class="w-12 h-9 rounded-md bg-gradient-to-br from-yellow-200 to-yellow-500"></div><i data-lucide="hexagon" class="text-neon w-5 h-5"></i></div>
+            <p class="text-2xl tracking-[.2em] font-medium mt-4">5274 •••• •••• 8821</p>
+            <div class="flex justify-between items-end mt-5"><div><p class="text-[10px] text-slate-400">CARD HOLDER</p><p class="text-sm font-semibold">ALEX CRYPTO</p></div><span class="text-2xl font-bold italic text-white/90">VISA</span></div>
+          </div>
+          <div class="flex gap-4 mt-6">
+            <button id="freezeBtn" onclick="toggleFreeze()" class="btn-glow flex-1 glass rounded-2xl py-4 font-semibold flex items-center justify-center gap-2"><i data-lucide="snowflake" class="w-5 h-5"></i>Заморозить карту</button>
+            <button onclick="openModal('modalReq')" class="btn-glow flex-1 rounded-2xl py-4 font-semibold flex items-center justify-center gap-2 bg-neon text-black"><i data-lucide="eye" class="w-5 h-5"></i>Реквизиты</button>
+          </div>
+        </div>
+        <div class="glass rounded-3xl p-7">
+          <h4 class="font-semibold mb-5">Лимиты и настройки</h4>
+          <div class="space-y-5">
+            <div><div class="flex justify-between text-sm mb-2"><span class="text-slate-400">Дневной лимит</span><span>$3,200 / $5,000</span></div><div class="h-2 rounded-full bg-white/5"><div class="h-2 rounded-full bg-gradient-to-r from-neon to-cyan" style="width:64%"></div></div></div>
+            <div class="flex items-center justify-between glass rounded-xl p-4"><span class="text-sm flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-neon"></i>Платежи онлайн</span><span class="w-10 h-6 rounded-full bg-neon/80 flex items-center px-1 justify-end"><span class="w-4 h-4 rounded-full bg-black"></span></span></div>
+            <div class="flex items-center justify-between glass rounded-xl p-4"><span class="text-sm flex items-center gap-2"><i data-lucide="globe" class="w-4 h-4 text-cyan"></i>Зарубежные операции</span><span class="w-10 h-6 rounded-full bg-neon/80 flex items-center px-1 justify-end"><span class="w-4 h-4 rounded-full bg-black"></span></span></div>
+            <div class="flex items-center justify-between glass rounded-xl p-4"><span class="text-sm flex items-center gap-2"><i data-lucide="bell" class="w-4 h-4 text-violet"></i>Push-уведомления</span><span class="w-10 h-6 rounded-full bg-white/10 flex items-center px-1"><span class="w-4 h-4 rounded-full bg-slate-400"></span></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STAKING -->
+    <section id="staking" class="tab">
+      <header class="mb-8"><h2 class="text-3xl font-bold">Стейкинг</h2><p class="text-slate-400 text-sm">Зарабатывай до 12% годовых на крипто-активах</p></header>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="glass rounded-3xl p-8">
+          <h4 class="font-semibold mb-6">Калькулятор доходности</h4>
+          <div class="mb-7"><div class="flex justify-between mb-3"><span class="text-sm text-slate-400">Сумма депозита</span><span id="stAmountLbl" class="text-neon font-bold">$5,000</span></div><input id="stAmount" type="range" min="100" max="50000" step="100" value="5000" class="w-full" oninput="calcStake()"></div>
+          <div class="mb-7"><div class="flex justify-between mb-3"><span class="text-sm text-slate-400">Срок (месяцев)</span><span id="stTermLbl" class="text-cyan font-bold">12 мес</span></div><input id="stTerm" type="range" min="1" max="36" step="1" value="12" class="w-full" oninput="calcStake()"></div>
+          <div><div class="flex justify-between mb-3"><span class="text-sm text-slate-400">Ставка APY</span><span id="stApyLbl" class="text-violet font-bold">12%</span></div><input id="stApy" type="range" min="4" max="20" step="1" value="12" class="w-full" oninput="calcStake()"></div>
+        </div>
+        <div class="glass rounded-3xl p-8 flex flex-col justify-center relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-40 h-40 bg-neon/15 rounded-full blur-3xl"></div>
+          <p class="text-slate-400 text-sm">Прогнозируемая прибыль</p>
+          <h3 id="stProfit" class="text-5xl font-extrabold text-neon my-3">$600</h3>
+          <p class="text-sm text-slate-300">Итого к выводу: <span id="stTotal" class="font-bold text-white">$5,600</span></p>
+          <div class="grid grid-cols-2 gap-4 mt-8"><div class="glass rounded-2xl p-4"><p class="text-xs text-slate-400">Ежемесячно</p><p id="stMonthly" class="text-xl font-bold">$50</p></div><div class="glass rounded-2xl p-4"><p class="text-xs text-slate-400">Ежедневно</p><p id="stDaily" class="text-xl font-bold">$1.64</p></div></div>
+          <button onclick="toast('Стейкинг запущен ✦','Средства размещены под выбранную ставку')" class="btn-glow mt-8 w-full rounded-2xl py-4 font-bold bg-gradient-to-r from-neon to-cyan text-black">Начать стейкинг</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="history" class="tab">
+      <header class="mb-8 flex items-center justify-between flex-wrap gap-4"><div><h2 class="text-3xl font-bold">История транзакций</h2><p class="text-slate-400 text-sm">Последние операции по вашему счёту</p></div></header>
+      <div class="glass rounded-3xl p-2 sm:p-4 overflow-x-auto">
+        <table class="w-full text-sm min-w-[600px]"><thead><tr class="text-slate-400 text-left text-xs uppercase tracking-wider"><th class="p-4">Операция</th><th class="p-4">Дата</th><th class="p-4">Сумма</th><th class="p-4">Статус</th></tr></thead><tbody id="txBody"></tbody></table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- MODAL: реквизиты -->
+<div id="modalReq" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div class="glass rounded-3xl p-8 w-full max-w-md fade-up relative">
+    <button onclick="closeModal('modalReq')" class="absolute top-5 right-5 text-slate-400 hover:text-neon"><i data-lucide="x"></i></button>
+    <h3 class="text-xl font-bold mb-1 flex items-center gap-2"><i data-lucide="lock" class="w-5 h-5 text-neon"></i>Реквизиты карты</h3>
+    <p class="text-xs text-slate-400 mb-6">Конфиденциально. Не передавайте третьим лицам.</p>
+    <div class="space-y-4">
+      <div class="glass rounded-xl p-4"><p class="text-[11px] text-slate-400">Номер карты</p><p class="text-lg tracking-widest font-medium">5274 1198 6630 8821</p></div>
+      <div class="grid grid-cols-2 gap-4"><div class="glass rounded-xl p-4"><p class="text-[11px] text-slate-400">Срок</p><p class="text-lg font-medium">09 / 28</p></div><div class="glass rounded-xl p-4"><p class="text-[11px] text-slate-400">CVV</p><p class="text-lg font-medium">•••</p></div></div>
+    </div>
+    <button onclick="closeModal('modalReq')" class="btn-glow mt-6 w-full rounded-2xl py-3 font-semibold bg-neon text-black">Скрыть</button>
+  </div>
+</div>
+
+<!-- MODAL: транзакции -->
+<div id="modalTx" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div class="glass rounded-3xl p-8 w-full max-w-md fade-up relative">
+    <button onclick="closeModal('modalTx')" class="absolute top-5 right-5 text-slate-400 hover:text-neon"><i data-lucide="x"></i></button>
+    <h3 id="txTitle" class="text-xl font-bold mb-1">Пополнить</h3>
+    <p id="txSub" class="text-xs text-slate-400 mb-6">Выберите актив и сумму</p>
+    <label class="text-xs text-slate-400">Актив</label>
+    <select id="txAsset" class="w-full glass rounded-xl p-3 mt-1 mb-4 bg-transparent text-sm" style="color-scheme:dark"><option value="USDT">USDT — Tether</option><option value="BTC">BTC — Bitcoin</option><option value="ETH">ETH — Ethereum</option><option value="SOL">SOL — Solana</option></select>
+    <label class="text-xs text-slate-400">Сумма (USD)</label>
+    <input id="txAmount" type="number" placeholder="0.00" class="w-full glass rounded-xl p-3 mt-1 mb-4 bg-transparent text-sm outline-none">
+    <div id="txAddrBox" class="glass rounded-xl p-4 mb-4 hidden"><p class="text-[11px] text-slate-400 mb-1">Адрес для пополнения (TRC-20)</p><p class="text-xs break-all text-neon">TQn9Y2khEsLJW1ChVWFMSMeRDow5Kc...8821</p></div>
+    <button id="txConfirm" class="btn-glow w-full rounded-2xl py-3 font-semibold bg-gradient-to-r from-neon to-cyan text-black">Подтвердить</button>
+  </div>
+</div>
+
+<div id="toastWrap" class="fixed bottom-6 right-6 z-[60] flex flex-col gap-3"></div>
+
+<script>
+lucide.createIcons();
+let state={balance:128450.72,btcPrice:0,prices:{}};
+
+function showTab(id,el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>{n.classList.remove('nav-active');n.classList.add('text-slate-400')});el.classList.add('nav-active');el.classList.remove('text-slate-400');document.getElementById('sidebar').classList.remove('open');}
+
+function toast(title,msg){const w=document.getElementById('toastWrap');const d=document.createElement('div');d.className='toast glass rounded-2xl p-4 pr-6 flex items-start gap-3 max-w-xs shadow-2xl';d.innerHTML='<div class="w-9 h-9 rounded-xl bg-neon/15 flex items-center justify-center shrink-0"><i data-lucide="check-circle-2" class="text-neon w-5 h-5"></i></div><div><p class="font-semibold text-sm">'+title+'</p><p class="text-xs text-slate-400">'+msg+'</p></div>';w.appendChild(d);lucide.createIcons();setTimeout(()=>{d.style.opacity='0';d.style.transition='.4s';setTimeout(()=>d.remove(),400)},3800);}
+
+function animateValue(el,start,end,dur,prefix,dec){let t0=null;function s(ts){if(!t0)t0=ts;let p=Math.min((ts-t0)/dur,1);let v=start+(end-start)*(1-Math.pow(1-p,3));el.textContent=prefix+v.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec});if(p<1)requestAnimationFrame(s);}requestAnimationFrame(s);}
+
+function renderBalance(){animateValue(document.getElementById('balUSD'),0,state.balance,1400,'$',2);const btc=state.btcPrice?state.balance/state.btcPrice:0;document.getElementById('balBTC').textContent=btc.toFixed(4);}
+
+/* ---- FREEZE ---- */
+let frozen=false;
+function toggleFreeze(){const card=document.getElementById('creditCard'),st=document.getElementById('cardStatus'),btn=document.getElementById('freezeBtn');frozen=!frozen;if(frozen){card.classList.add('grid-frozen');card.style.background='linear-gradient(135deg,#3a3a3a,#1c1c1c)';st.textContent='● Заблокирована';st.className='text-slate-400 text-sm font-semibold';btn.innerHTML='<i data-lucide=\'flame\' class=\'w-5 h-5\'></i>Разморозить карту';toast('Карта заморожена','Все операции временно приостановлены');}else{card.classList.remove('grid-frozen');card.style.background='linear-gradient(135deg,#0d2b25,#0B0F19 60%,#1a1340)';st.textContent='● Активна';st.className='text-neon text-sm font-semibold';btn.innerHTML='<i data-lucide=\'snowflake\' class=\'w-5 h-5\'></i>Заморозить карту';toast('Карта активна','Операции снова доступны');}lucide.createIcons();}
+
+/* ---- MODALS ---- */
+function openModal(id){const m=document.getElementById(id);m.classList.remove('hidden');m.classList.add('flex');lucide.createIcons();}
+function closeModal(id){const m=document.getElementById(id);m.classList.add('hidden');m.classList.remove('flex');}
+
+let txMode='deposit';
+const txMeta={deposit:{t:'Пополнить (Crypto)',s:'Переведите крипту на адрес ниже',pos:1,i:'download',c:'neon'},transfer:{t:'Перевести',s:'Отправьте средства на другой кошелёк',pos:0,i:'send',c:'violet'},exchange:{t:'Обменять',s:'Конвертируйте один актив в другой',pos:0,i:'repeat',c:'cyan'}};
+function openTx(mode){txMode=mode;const m=txMeta[mode];document.getElementById('txTitle').textContent=m.t;document.getElementById('txSub').textContent=m.s;document.getElementById('txAddrBox').classList.toggle('hidden',mode!=='deposit');document.getElementById('txAmount').value='';openModal('modalTx');}
+document.getElementById('txConfirm').onclick=function(){const amt=parseFloat(document.getElementById('txAmount').value);const asset=document.getElementById('txAsset').value;if(!amt||amt<=0){toast('Ошибка','Введите корректную сумму');return;}const m=txMeta[txMode];if(m.pos)state.balance+=amt;else state.balance-=amt;renderBalance();const names={deposit:'Пополнение '+asset,transfer:'Перевод '+asset,exchange:'Обмен → '+asset};addTx({n:names[txMode],i:m.i,c:m.c,d:nowStr(),a:(m.pos?'+ ':'- ')+'$'+amt.toLocaleString('en-US',{minimumFractionDigits:2}),pos:m.pos,s:'Успешно',sc:'green'});closeModal('modalTx');toast(m.t+' — успешно',asset+' · $'+amt.toLocaleString());};
+function nowStr(){const d=new Date();return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'short'})+', '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}
+
+/* ---- STAKING ---- */
+function calcStake(){const amt=+stAmount.value,term=+stTerm.value,apy=+stApy.value;stAmountLbl.textContent='$'+amt.toLocaleString();stTermLbl.textContent=term+' мес';stApyLbl.textContent=apy+'%';const profit=amt*(apy/100)*(term/12);const f=n=>'$'+n.toLocaleString('en-US',{maximumFractionDigits:2});stProfit.textContent=f(profit);stTotal.textContent=f(amt+profit);stMonthly.textContent=f(profit/term);stDaily.textContent=f(profit/(term*30));}
+calcStake();
+
+/* ---- HISTORY ---- */
+let txs=[{n:'Пополнение USDT',i:'download',c:'neon',d:'12 дек, 14:22',a:'+ $2,500.00',pos:1,s:'Успешно',sc:'green'},{n:'Оплата подписки Claude Pro',i:'sparkles',c:'violet',d:'10 дек, 09:14',a:'- $20.00',pos:0,s:'Успешно',sc:'green'},{n:'Покупка кофе в Дубае',i:'coffee',c:'cyan',d:'09 дек, 18:47',a:'- $7.30',pos:0,s:'Успешно',sc:'green'},{n:'Перевод на холодный кошелёк',i:'send',c:'violet',d:'08 дек, 11:03',a:'- $5,000.00',pos:0,s:'В обработке',sc:'yellow'},{n:'Стейкинг награда',i:'trending-up',c:'neon',d:'01 дек, 00:01',a:'+ $48.20',pos:1,s:'Успешно',sc:'green'}];
+function renderTx(){document.getElementById('txBody').innerHTML=txs.map(t=>'<tr class="border-t border-white/5 hover:bg-white/[.03] transition"><td class="p-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-'+t.c+'/15 flex items-center justify-center"><i data-lucide="'+t.i+'" class="w-5 h-5 text-'+t.c+'"></i></div><span class="font-medium">'+t.n+'</span></div></td><td class="p-4 text-slate-400">'+t.d+'</td><td class="p-4 font-semibold '+(t.pos?'text-green-400':'text-slate-200')+'">'+t.a+'</td><td class="p-4"><span class="px-3 py-1 rounded-full text-xs font-medium '+(t.sc==='green'?'bg-green-500/15 text-green-400':'bg-yellow-500/15 text-yellow-400')+'">'+t.s+'</span></td></tr>').join('');lucide.createIcons();}
+function addTx(t){txs.unshift(t);renderTx();}
+renderTx();
+
+/* ---- CHARTS ---- */
+let chartFlow,chartPie;
+function initCharts(labels,data){const cf=document.getElementById('chartFlow').getContext('2d');const g=cf.createLinearGradient(0,0,0,260);g.addColorStop(0,'#00FFA366');g.addColorStop(1,'#00FFA300');chartFlow=new Chart(cf,{type:'line',data:{labels:labels,datasets:[{label:'BTC/USD',data:data,borderColor:'#00FFA3',backgroundColor:g,fill:true,tension:.4,borderWidth:2,pointRadius:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748b',maxTicksLimit:7}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#64748b'}}}}});const cp=document.getElementById('chartPie').getContext('2d');chartPie=new Chart(cp,{type:'doughnut',data:{labels:['BTC','ETH','USDT','SOL'],datasets:[{data:[45,28,18,9],backgroundColor:['#00FFA3','#7C5CFF','#3BE0FF','#f59e0b'],borderColor:'#0B0F19',borderWidth:3}]},options:{cutout:'68%',plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',usePointStyle:true,padding:14}}}}});}
+
+/* ---- LIVE PRICES (CoinGecko) ---- */
+const COINS=[{id:'bitcoin',sym:'BTC'},{id:'ethereum',sym:'ETH'},{id:'tether',sym:'USDT'},{id:'solana',sym:'SOL'}];
+async function loadPrices(){
+  try{
+    const ids=COINS.map(c=>c.id).join(',');
+    const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids='+ids+'&vs_currencies=usd&include_24hr_change=true');
+    const d=await r.json();
+    state.btcPrice=d.bitcoin.usd;
+    document.getElementById('tickers').innerHTML=COINS.map(c=>{const p=d[c.id];const ch=p.usd_24h_change;const up=ch>=0;return '<div class="glass lift rounded-2xl p-4"><div class="flex items-center justify-between"><span class="font-semibold">'+c.sym+'</span><span class="text-xs '+(up?'text-green-400':'text-red-400')+'">'+(up?'▲':'▼')+' '+Math.abs(ch).toFixed(2)+'%</span></div><p class="text-lg font-bold mt-1">$'+p.usd.toLocaleString('en-US',{maximumFractionDigits:p.usd<10?4:0})+'</p></div>';}).join('');
+    document.getElementById('liveBadge').innerHTML='<span class="w-2 h-2 rounded-full bg-neon animate-pulse"></span>Live · обновлено '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+    renderBalance();
+  }catch(e){document.getElementById('liveBadge').innerHTML='<span class="w-2 h-2 rounded-full bg-red-400"></span>Оффлайн · демо-курсы';state.btcPrice=66250;renderBalance();}
+}
+async function loadChart(){
+  try{
+    const r=await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=7&interval=daily');
+    const d=await r.json();
+    const labels=d.prices.map(p=>new Date(p[0]).toLocaleDateString('ru-RU',{day:'2-digit',month:'short'}));
+    const data=d.prices.map(p=>Math.round(p[1]));
+    initCharts(labels,data);
+  }catch(e){initCharts(['Д1','Д2','Д3','Д4','Д5','Д6','Д7'],[64000,65200,63800,66100,67200,66800,68400]);document.getElementById('chartSub').textContent='демо-данные';}
+}
+loadPrices();loadChart();setInterval(loadPrices,60000);
+</script>
+</body>
+</html>
